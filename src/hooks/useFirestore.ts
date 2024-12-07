@@ -164,6 +164,16 @@ export function useFirestore(collectionName: string) {
     }
   };
 
+  const getUserProfile = async (userId: string): Promise<{ id: string, displayName: string } | null> => {
+    const userDocRef = doc(db, 'users', userId); 
+    const userDoc = await getDoc(userDocRef); 
+
+    if (userDoc.exists()) {
+      return { id: userDoc.id, displayName: userDoc.data()?.displayName };
+    }
+    return null;
+  };
+
   return {
     loading,
     error,
@@ -172,6 +182,7 @@ export function useFirestore(collectionName: string) {
     addDocument,
     setDocument,
     updateDocument,
-    deleteDocument
+    deleteDocument,
+    getUserProfile
   };
 }

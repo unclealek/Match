@@ -27,13 +27,18 @@ export default function GroupDetails() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { getDocument, updateDocument } = useFirestore('groups');
+  const { getDocument, updateDocument, getUserProfile } = useFirestore('groups');
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [matchingInProgress, setMatchingInProgress] = useState(false);
   const [memberProfiles, setMemberProfiles] = useState<UserProfile[]>([]);
 
   useEffect(() => {
+    const fetchMemberProfiles = async (memberIds) => {
+      const profiles = await Promise.all(memberIds.map(id => getUserProfile(id)));
+      setMemberProfiles(profiles.filter(profile => profile !== null)); // Filter out null profiles
+    };
+
     async function loadGroup() {
       if (!groupId || !currentUser) return;
 
@@ -55,8 +60,9 @@ export default function GroupDetails() {
         setGroup(groupData as Group);
 
         // Load member profiles
-        const profiles = await Promise.all(groupData.members.map(loadUserProfile));
-        setMemberProfiles(profiles.filter(profile => profile !== null) as UserProfile[]);
+        if (groupData.members) {
+          fetchMemberProfiles(groupData.members);
+        }
       } catch (error) {
         console.error('Error loading group:', error);
         toast.error('Failed to load group details');
@@ -67,7 +73,7 @@ export default function GroupDetails() {
     }
 
     loadGroup();
-  }, [groupId, currentUser, getDocument, navigate]);
+  }, [groupId, currentUser, getDocument, navigate, getUserProfile]);
 
   const handleMatch = async () => {
     if (!group || !currentUser || currentUser.uid !== group.createdBy) return;
@@ -159,11 +165,13 @@ export default function GroupDetails() {
                   <div>
                     <dt className="text-sm font-medium text-text-secondary">Your Gift Recipient</dt>
                     <dd className="mt-1 text-sm text-text">
-                      {currentUser && group.matches[currentUser.uid] ? (
+                      {currentUser && group.matches && group.matches[currentUser.uid] ? (
                         <span className="font-medium text-primary">
                           Your gift recipient is: {
-                          group.matches[currentUser.uid]
-                          } 
+                            memberProfiles.length > 0 
+                            ? memberProfiles.find(profile => profile && profile.id === group.matches[currentUser.uid])?.displayName || 'Unknown Recipient'
+                            : 'No profiles available'
+                          }
                         </span>
                       ) : (
                         <span className="text-text-secondary">
@@ -190,9 +198,4 @@ export default function GroupDetails() {
       </div>
     </div>
   );
-}
-
-// Assuming loadUserProfile function is defined elsewhere
-async function loadUserProfile(userId: string): Promise<UserProfile | null> {
-  // Implementation to load user profile
 }
