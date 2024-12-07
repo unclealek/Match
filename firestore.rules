@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isGroupMember(groupData) {
+      return isSignedIn() && groupData.members.hasAny([request.auth.uid]);
+    }
+
+    function isGroupAdmin(groupData) {
+      return isSignedIn() && groupData.createdBy == request.auth.uid;
+    }
+
+    function isWithinMemberLimit(groupData) {
+      return groupData.members.size() <= 20;
+    }
+
+    // User profile rules
+    match /users/{userId} {
+      // Allow reading basic profile info if signed in
+      allow read: if isSignedIn();
+      // Only allow users to modify their own profile
+      allow write: if isSignedIn() && userId == request.auth.uid;
+      
+      // User's private data
+      match /private/{document=**} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+    
+    // Waitlist rules
+    match /waitlist/{document} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if false; // Only admins can update/delete waitlist entries
+    }
+    
+    // Gift suggestions rules
+    match /giftSuggestions/{document} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Group management rules
+    match /groups/{groupId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.members.hasAny([request.auth.uid]) ||
+        resource.data.createdBy == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        isGroupAdmin(resource.data) ||
+        (isGroupMember(resource.data) && isWithinMemberLimit(request.resource.data))
+      );
+      allow delete: if isSignedIn() && isGroupAdmin(resource.data);
+    }
+    
+    // Group messages subcollection
+    match /groups/{groupId}/messages/{messageId} {
+      allow read: if isSignedIn() && isGroupMember(get(/databases/$(database)/documents/groups/$(groupId)).data);
+      allow create: if isSignedIn() && 
+        isGroupMember(get(/databases/$(database)/documents/groups/$(groupId)).data) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+    
+    // Gift matches rules
+    match /giftMatches/{matchId} {
+      allow read: if isSignedIn() && (
+        resource.data.giverId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.giverId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Notifications rules
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Public data
+    match /public/{document=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    // Allow read/write access on all documents for development
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
