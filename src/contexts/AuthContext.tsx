@@ -92,21 +92,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
       if (user) {
-        console.log('Auth state changed - user:', user.displayName);
-        // Check and create profile if it doesn't exist
         const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (!userSnap.exists()) {
-          await createUserProfile(user, user.displayName || 'User');
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          setCurrentUser({ ...user, isAdmin: userDoc.data().isAdmin }); // Set isAdmin from Firestore
+        } else {
+          // Initialize user profile if it doesn't exist
+          await initializeUserProfile(user, user.displayName || '');
+          setCurrentUser({ ...user, isAdmin: false }); // Default to not admin
         }
+      } else {
+        setCurrentUser(null);
       }
-      setCurrentUser(user);
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const value = {

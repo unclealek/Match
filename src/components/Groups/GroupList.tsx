@@ -8,6 +8,7 @@ import GiftMatchSystem from './GiftMatchSystem';
 import MemberList from './MemberList';
 import { formatGroupCode, formatDate } from '../../utils/groupCode';
 import { useNavigate } from 'react-router-dom';
+import { doc, deleteDoc } from 'firebase/firestore';
 
 interface Group {
   id: string;
@@ -31,7 +32,7 @@ export default function GroupList() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const { currentUser } = useAuth();
-  const { getDocuments, updateDocument } = useFirestore('groups');
+  const { getDocuments, updateDocument, db } = useFirestore('groups');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,8 +90,26 @@ export default function GroupList() {
     navigate(`/groups/${groupId}`);
   }
 
-  function handleDeleteGroup(groupId: string) {
-    // Implement delete group logic here
+  async function handleDeleteGroup(groupId: string) {
+    const isAdmin = currentUser?.isAdmin; // Check if the user is an admin
+
+    if (!isAdmin) {
+      toast.error('You do not have permission to delete this group.');
+      return;
+    }
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this group? This action cannot be undone.');
+
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, 'groups', groupId)); // Adjust the collection name if necessary
+        toast.success('Group deleted successfully.');
+        loadGroups(); // Refresh the groups list after deletion
+      } catch (error) {
+        console.error('Error deleting group:', error);
+        toast.error('Failed to delete group.');
+      }
+    }
   }
 
   return (
@@ -145,10 +164,10 @@ export default function GroupList() {
                 >
                   View Group
                 </button>
-                {currentUser?.uid === group.createdBy && (
+                {currentUser?.isAdmin && (
                   <button
                     onClick={() => handleDeleteGroup(group.id)}
-                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-text bg-secondary hover:bg-secondary-hover active:bg-secondary-active focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200"
+                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
                   >
                     Delete
                   </button>

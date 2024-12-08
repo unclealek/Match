@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFirestore } from '../../hooks/useFirestore';
-import { generateGroupCode, formatGroupCode } from '../../utils/groupCode';
+import { generateUniqueGroupCode } from '../../utils/uuid';
 import { toast } from 'react-hot-toast';
 import { Timestamp } from 'firebase/firestore';
 
@@ -47,50 +47,23 @@ export default function CreateGroupModal({
     '$500+'
   ];
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!currentUser) {
-      toast.error('You must be signed in to create a group');
-      return;
-    }
-
-    if (!name.trim()) {
-      toast.error('Please enter a group name');
-      return;
-    }
-
-    if (!occasion) {
-      toast.error('Please select an occasion');
-      return;
-    }
+  const handleCreateGroup = async () => {
+    setLoading(true);
+    const groupData = {
+      name: name.trim(),
+      description: description.trim() || '',
+      createdBy: currentUser.uid,
+      createdAt: Timestamp.now(),
+      members: [currentUser.uid],
+      occasion,
+      budget: budget || null,
+      giftExchangeDate: giftExchangeDate ? Timestamp.fromDate(new Date(giftExchangeDate)) : null,
+      groupCode: generateUniqueGroupCode(),
+      maxMembers: MAX_MEMBERS,
+      matchData: null
+    };
 
     try {
-      setLoading(true);
-      console.log('Starting group creation process...');
-      
-      // Generate a unique group code
-      let isUnique = false;
-      let groupCode = '';
-      let attempts = 0;
-      const maxAttempts = 5;
-      
-      while (!isUnique && attempts < maxAttempts) {
-        groupCode = generateGroupCode();
-        console.log('Generated group code:', groupCode);
-        // Check if code already exists
-        const existingGroups = await getDocuments([
-          ['groupCode', '==', groupCode]
-        ]);
-        if (existingGroups.length === 0) {
-          isUnique = true;
-        }
-        attempts++;
-      }
-
-      if (!isUnique) {
-        throw new Error('Failed to generate a unique group code after multiple attempts');
-      }
-
       // Get user's existing groups where they are admin
       console.log('Checking existing admin groups...');
       const adminGroups = await getDocuments([
@@ -103,22 +76,6 @@ export default function CreateGroupModal({
         return;
       }
 
-      const now = Timestamp.now();
-      const groupData = {
-        name: name.trim(),
-        description: description.trim() || '',
-        occasion,
-        budget: budget || null,
-        groupCode,
-        giftExchangeDate: giftExchangeDate ? Timestamp.fromDate(new Date(giftExchangeDate)) : null,
-        createdBy: currentUser.uid,
-        members: [currentUser.uid],
-        createdAt: now,
-        updatedAt: now,
-        maxMembers: MAX_MEMBERS,
-        matchData: null
-      };
-
       console.log('Creating group with data:', groupData);
       const groupId = await addDocument(groupData);
       console.log('Group created successfully with ID:', groupId);
@@ -127,7 +84,7 @@ export default function CreateGroupModal({
         <div>
           Group created successfully!
           <br />
-          Share code: <strong>{formatGroupCode(groupCode)}</strong>
+          Share code: <strong>{groupData.groupCode}</strong>
         </div>
       );
       onGroupCreated();
@@ -143,7 +100,7 @@ export default function CreateGroupModal({
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   function resetForm() {
     setName('');
@@ -183,7 +140,7 @@ export default function CreateGroupModal({
                 After creating the group, you'll receive a unique code to share with others. Groups can have up to {MAX_MEMBERS} members.
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+              <form onSubmit={(e) => e.preventDefault()} className="mt-6 space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                     Group Name *
@@ -266,7 +223,8 @@ export default function CreateGroupModal({
 
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleCreateGroup}
                     disabled={loading}
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                   >

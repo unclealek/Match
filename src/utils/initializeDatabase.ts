@@ -12,6 +12,7 @@ export interface UserProfile {
   activities?: string[];
   createdAt: Date;
   updatedAt: Date;
+  isAdmin: boolean;
 }
 
 export async function initializeUserProfile(user: User, displayName: string): Promise<void> {
@@ -29,6 +30,7 @@ export async function initializeUserProfile(user: User, displayName: string): Pr
       activities: [],
       createdAt: new Date(),
       updatedAt: new Date(),
+      isAdmin: user.email === 'admin@example.com' // Example condition for admin
     };
 
     // Set the initial profile data

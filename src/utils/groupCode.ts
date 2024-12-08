@@ -1,8 +1,8 @@
-// Generate a random 6-character alphanumeric code
+// Generate a random 8-character alphanumeric code
 export function generateGroupCode(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) { // Increased length to 8
     code += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return code;
@@ -10,8 +10,8 @@ export function generateGroupCode(): string {
 
 // Format a group code with dashes for readability (e.g., ABC-123)
 export function formatGroupCode(code: string): string {
-  if (code.length !== 6) return code;
-  return `${code.slice(0, 3)}-${code.slice(3)}`;
+  if (code.length !== 8) return code; // Changed length check to 8
+  return `${code.slice(0, 4)}-${code.slice(4)}`; // Changed slice indices to accommodate 8-character code
 }
 
 // Remove formatting from group code
