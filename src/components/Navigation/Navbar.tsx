@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { theme } from '../../styles/theme';
 
 export default function Navbar() {
   const { currentUser, logout } = useAuth();
@@ -24,7 +25,7 @@ export default function Navbar() {
             <div className="flex-shrink-0 flex items-center">
               <Link 
                 to="/" 
-                className="text-2xl font-bold text-white hover:text-text transition-colors duration-200"
+                className={`text-2xl font-bold text-primary hover:text-${theme.colors.text.secondary} transition-colors duration-200`}
               >
                 Gifted Hands
               </Link>
@@ -36,19 +37,19 @@ export default function Navbar() {
               <>
                 <Link
                   to="/dashboard"
-                  className="text-white hover:text-text px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  className={`text-primary hover:text-${theme.colors.text.secondary} px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   to="/profile"
-                  className="text-white hover:text-text px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  className={`text-primary hover:text-${theme.colors.text.secondary} px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200`}
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-secondary text-text hover:bg-secondary-hover active:bg-secondary-active px-4 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                  className={`bg-secondary text-text hover:bg-${theme.colors.secondary.hover} active:bg-${theme.colors.secondary.active} px-4 py-2 rounded-md text-sm font-medium transition-all duration-200`}
                 >
                   Logout
                 </button>
@@ -57,13 +58,13 @@ export default function Navbar() {
               <>
                 <Link
                   to="/login"
-                  className="text-white hover:text-text px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  className={`text-primary hover:text-${theme.colors.text.secondary} px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200`}
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-secondary text-text hover:bg-secondary-hover active:bg-secondary-active px-4 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                  className={`bg-secondary text-text hover:bg-${theme.colors.secondary.hover} active:bg-${theme.colors.secondary.active} px-4 py-2 rounded-md text-sm font-medium transition-all duration-200`}
                 >
                   Register
                 </Link>

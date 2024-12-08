@@ -141,7 +141,7 @@ export default function GroupList() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handleViewGroup(group.id)}
-                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-primary hover:bg-primary-hover active:bg-primary-active focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-secondary bg-primary hover:bg-primary-hover active:bg-primary-active focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
                 >
                   View Group
                 </button>

@@ -60,39 +60,27 @@ export default function JoinGroupForm() {
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg font-medium leading-6 text-gray-900">
-          Join a Group
-        </h3>
-        <div className="mt-2 max-w-xl text-sm text-gray-500">
-          <p>Enter the group code shared with you to join a gift exchange group. Groups are limited to 20 members.</p>
-        </div>
-        <form onSubmit={handleSubmit} className="mt-5 sm:flex sm:items-center">
-          <div className="w-full sm:max-w-xs">
-            <label htmlFor="groupCode" className="sr-only">
-              Group Code
-            </label>
-            <input
-              type="text"
-              name="groupCode"
-              id="groupCode"
-              value={groupCode}
-              onChange={(e) => setGroupCode(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              placeholder="Enter code (e.g., ABC-123)"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-          >
-            {loading ? 'Joining...' : 'Join Group'}
-          </button>
-        </form>
+    <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6">
+      <h2 className="text-lg font-medium">Join a Group</h2>
+      <div className="mt-4">
+        <label htmlFor="groupCode" className="block text-sm font-medium text-text-secondary">Group Code</label>
+        <input
+          type="text"
+          id="groupCode"
+          value={groupCode}
+          onChange={(e) => setGroupCode(e.target.value)}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-primary focus:border-primary"
+          placeholder="Enter code (e.g., ABC-123)"
+          required
+        />
       </div>
-    </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="mt-4 bg-primary text-text hover:bg-primary-hover active:bg-primary-active px-4 py-2 rounded-md text-sm font-medium transition-all duration-200"
+      >
+        {loading ? 'Joining...' : 'Join Group'}
+      </button>
+    </form>
   );
 }
